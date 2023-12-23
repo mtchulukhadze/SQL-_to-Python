@@ -1,0 +1,39 @@
+import pandas as pd
+import pyodbc
+user = 'DESKTOP-3QJN7S3' + "\)" + "user"  # sql server user name
+user_rep = user.replace(")", "")
+
+conn = pyodbc.connect("Driver={SQL Server};"
+                      "Server=DESKTOP-3QJN7S3;"  # Server name
+                      f"uid={user_rep}"
+                      "Database=data_analysis_project;"  # selected database
+                      "Trusted_Connection=yes;")
+
+cursor = conn.cursor()
+
+try:
+    cursor.execute('''drop table if exists data_analysis_project.dbo.test2''')
+    cursor.commit()
+except Exception as e:
+    conn.rollback()
+
+try:
+    cursor.execute('''create table data_analysis_project.dbo.test2 (column1 varchar(32))''')
+    cursor.commit()
+    print('table created successfully')
+except Exception as e:
+    conn.rollback()
+    print(f'error{e}')
+
+data = pd.read_sql_query('''select top 2 last_name from data_analysis_project.dbo.employee''', conn)
+
+try:
+    for index, row in data.iterrows():
+        cursor.execute('''insert into data_analysis_project.dbo.test2 (column1) values(?)''', row['last_name'])
+        cursor.commit()
+
+except Exception as e:
+    conn.rollback()
+    print(f'error{e}')
+
+print(pd.read_sql_query('''select * from data_analysis_project.dbo.test2''', conn))
