@@ -15,7 +15,7 @@ cursor = conn.cursor()
 
 # insert data into table
 data = pd.read_csv(r"D:\Data\SampleData.csv")
-print(data.head())
+# print(data.head())
 
 try:
     cursor.execute('''create table Data_Model.dbo.test (OrderDate Date, region varchar(32), rep varchar(32), item varchar(32),
