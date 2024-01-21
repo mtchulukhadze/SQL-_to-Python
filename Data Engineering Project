@@ -1,0 +1,49 @@
+import pandas as pd
+import pyodbc
+
+user = 'DESKTOP-3QJN7S3' + "\)" + "user"  # sql server user name
+user_rep = user.replace(")", "")
+
+conn = pyodbc.connect("Driver={SQL Server};"
+                          "Server=DESKTOP-3QJN7S3;"  # Server name
+                          f"uid={user_rep}"
+                          "Database=Data_Model;"  # selected database
+                          "Trusted_Connection=yes;")
+
+cursor = conn.cursor()
+# data = pd.read_sql_query('''select * from Data_Model.dbo.test''', conn)
+
+# insert data into table
+data = pd.read_csv(r"D:\Data\SampleData.csv")
+print(data.head())
+
+try:
+    cursor.execute('''create table Data_Model.dbo.test (OrderDate Date, region varchar(32), rep varchar(32), item varchar(32),
+    units int, unit_cst float, ttl float)''')
+    conn.commit()
+except Exception as e:
+    conn.rollback()
+    print(f"{e}")
+
+data = pd.read_csv(r"D:\Data\SampleData.csv")
+# data = data2.head(2)
+# print(data)
+
+for index, row in data.iterrows():
+    try:
+        cursor.execute('''
+            INSERT INTO Data_Model.dbo.test (OrderDate, region, rep, item, units, unit_cst, ttl)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', row['OrderDate'], row['Region'], row['Rep'], row['Item'], row['Units'], row['Unit Cost'], row['Total'])
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error inserting row {index + 1}: {e}")
+
+# Close the cursor and connection
+cursor.close()
+conn.close()
+
+
+print(pd.read_sql_query('''select * 
+        from Data_Model.dbo.test''', conn))
